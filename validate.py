@@ -70,3 +70,5 @@ def save_processed(fato_venda, dim_cliente, dim_tempo):
 if dados_validos:
     os.makedirs('./data_lake/processed/', exist_ok=True)
     save_processed(fato_venda, dim_cliente_df, dim_tempo_df)
+    
+print(fato_venda.dtypes)
