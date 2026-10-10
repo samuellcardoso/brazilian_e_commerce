@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 from transform import fato_venda, dim_cliente_df, dim_tempo_df
 
 def validate(f_venda, d_cliente, d_tempo):
@@ -58,4 +59,14 @@ def validate(f_venda, d_cliente, d_tempo):
         return False
 
     return True
-print(validate(fato_venda, dim_cliente_df, dim_tempo_df))
+
+dados_validos = validate(fato_venda, dim_cliente_df, dim_tempo_df)
+
+def save_processed(fato_venda, dim_cliente, dim_tempo):  
+    fato_venda.to_csv('./data_lake/processed/fato_venda.csv', index=False, encoding='utf-8')
+    dim_cliente.to_csv('./data_lake/processed/dim_cliente.csv', index=False, encoding='utf-8')
+    dim_tempo.to_csv('./data_lake/processed/dim_tempo.csv', index=False, encoding='utf-8')
+    
+if dados_validos:
+    os.makedirs('./data_lake/processed/', exist_ok=True)
+    save_processed(fato_venda, dim_cliente_df, dim_tempo_df)
