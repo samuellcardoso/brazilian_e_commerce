@@ -1,5 +1,6 @@
 from db_connection import conn
 from validate import fato_venda, dim_cliente_df, dim_tempo_df
+from logging_config import logger
 
 def criar_tabelas():
     try:
@@ -40,12 +41,12 @@ def criar_tabelas():
                         FOREIGN KEY (tempo_id) REFERENCES dim_tempo(tempo_id)
                     )'''
             )  
-    except Exception as e:
-        print(f'Erro ao criar as tabelas: {e}')
+    except Exception:
+        logger.exception('Erro ao criar as tabelas.')
         conn.rollback()
         return False
     else:
-        print('Tabelas criadas com sucesso.')
+        logger.info('Tabelas criadas com sucesso.')
         conn.commit()
         return True
 
@@ -80,12 +81,12 @@ def inserir_dim_cliente():
                             row['customer_state']
                         )
                 )
-    except Exception as e:
+    except Exception:
         conn.rollback()
-        print(f'Erro ao inserir os dados na tabela dim_cliente: {e}')
+        logger.exception('Erro ao inserir os dados na tabela dim_cliente.')
         return False
     else:
-        print('dim_cliente carregada com sucesso.')
+        logger.info(f'dim_cliente carregada com sucesso. | registros={len(dim_cliente_df)}')
         conn.commit()
         return True
     
@@ -120,13 +121,13 @@ def inserir_dim_tempo():
                             row['dia_semana']
                         )
                 )
-    except Exception as e:
+    except Exception:
         conn.rollback()
-        print(f'Erro ao inserir dados na tabela dim_tempo: {e}')
+        logger.exception('Erro ao inserir dados na tabela dim_tempo.')
         return False
     else:
         conn.commit()
-        print('dim_tempo carregada com sucesso.')
+        logger.info(f'dim_tempo carregada com sucesso. | registros={len(dim_tempo_df)}')
         return True
     
 def inserir_fato_venda():
@@ -163,13 +164,13 @@ def inserir_fato_venda():
                             row['freight_value']
                         )
                 )
-    except Exception as e:
+    except Exception:
         conn.rollback()
-        print(f'Erro ao inserir os dados na tabela fato_vendas: {e}')
+        logger.exception('Erro ao inserir os dados na tabela fato_vendas.')
         return False
     else:
         conn.commit()
-        print('fato_vendas carregada com sucesso')
+        logger.info(f'fato_vendas carregada com sucesso. | registros={len(fato_venda)}')
         return True
 
 tabelas = criar_tabelas()
