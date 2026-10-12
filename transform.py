@@ -1,6 +1,6 @@
 #%%
 import pandas as pd
-from extract import df_cliente_original, df_pedidos_original, df_item_pedidos_original
+from read_raw import df_cliente_original, df_pedidos_original, df_item_pedidos_original
 from logging_config import logger
 
 merged = df_pedidos_original.merge(df_item_pedidos_original, on='order_id')
