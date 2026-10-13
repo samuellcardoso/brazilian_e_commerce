@@ -1,6 +1,5 @@
 import pandas as pd
 import os
-from transform import fato_venda, dim_cliente_df, dim_tempo_df
 from logging_config import logger
 
 def validate(f_venda, d_cliente, d_tempo):
@@ -96,8 +95,3 @@ def save_processed(fato_venda, dim_cliente, dim_tempo):
     except Exception:
         logger.exception('Erro no salvamento dos arquivos processed.')
         raise
-    
-dados_validos = validate(fato_venda, dim_cliente_df, dim_tempo_df)
-
-if dados_validos:
-    save_processed(fato_venda, dim_cliente_df, dim_tempo_df)

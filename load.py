@@ -1,5 +1,4 @@
 from db_connection import conn
-from validate import fato_venda, dim_cliente_df, dim_tempo_df
 from logging_config import logger
 
 def criar_tabelas():
@@ -46,11 +45,11 @@ def criar_tabelas():
         conn.rollback()
         return False
     else:
-        logger.info('Tabelas criadas com sucesso.')
         conn.commit()
+        logger.info('Tabelas criadas com sucesso.')
         return True
 
-def inserir_dim_cliente():
+def inserir_dim_cliente(dim_cliente_df):
     try:
         with conn.cursor() as cursor:
             for _, row in dim_cliente_df.iterrows():
@@ -86,11 +85,11 @@ def inserir_dim_cliente():
         logger.exception('Erro ao inserir os dados na tabela dim_cliente.')
         return False
     else:
-        logger.info(f'dim_cliente carregada com sucesso. | registros={len(dim_cliente_df)}')
         conn.commit()
+        logger.info(f'dim_cliente carregada com sucesso | registros={len(dim_cliente_df)}')
         return True
     
-def inserir_dim_tempo():
+def inserir_dim_tempo(dim_tempo_df):
     try:
         with conn.cursor() as cursor:
             for _, row in dim_tempo_df.iterrows():
@@ -127,10 +126,10 @@ def inserir_dim_tempo():
         return False
     else:
         conn.commit()
-        logger.info(f'dim_tempo carregada com sucesso. | registros={len(dim_tempo_df)}')
+        logger.info(f'dim_tempo carregada com sucesso | registros={len(dim_tempo_df)}')
         return True
     
-def inserir_fato_venda():
+def inserir_fato_venda(fato_venda):
     try:
         with conn.cursor() as cursor:
             for _, row in fato_venda.iterrows():
@@ -170,15 +169,20 @@ def inserir_fato_venda():
         return False
     else:
         conn.commit()
-        logger.info(f'fato_vendas carregada com sucesso. | registros={len(fato_venda)}')
+        logger.info(f'fato_vendas carregada com sucesso | registros={len(fato_venda)}')
         return True
-
-tabelas = criar_tabelas()
-if tabelas:
-    clientes_ok = inserir_dim_cliente()
     
-    if clientes_ok:
-        tempo_ok = inserir_dim_tempo()
-        
-        if tempo_ok:
-            inserir_fato_venda()
+def load_data(dim_cliente_df, dim_tempo_df, fato_venda) -> bool:
+    if not criar_tabelas():
+        return False
+
+    if not inserir_dim_cliente(dim_cliente_df):
+        return False
+
+    if not inserir_dim_tempo(dim_tempo_df):
+        return False
+
+    if not inserir_fato_venda(fato_venda):
+        return False
+
+    return True
