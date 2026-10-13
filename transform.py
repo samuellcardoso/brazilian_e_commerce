@@ -3,9 +3,9 @@ from logging_config import logger
 
 def criar_base(pedidos: pd.DataFrame, itens: pd.DataFrame) -> pd.DataFrame:
     try:
-        merged = pedidos.merge(itens, on='order_id')
+        base = pedidos.merge(itens, on='order_id')
         
-        base = merged[['order_id', 'order_item_id', 'customer_id', 'order_purchase_timestamp', 'price', 'freight_value']].copy()
+        base = base[['order_id', 'order_item_id', 'customer_id', 'order_purchase_timestamp', 'price', 'freight_value']].copy()
         
         logger.info(f'Base consolidada criada | registros={len(base)}')
         
@@ -18,18 +18,18 @@ def criar_base(pedidos: pd.DataFrame, itens: pd.DataFrame) -> pd.DataFrame:
 
 def dim_tempo(base: pd.DataFrame) -> pd.DataFrame:
     try:
-        df = base[['order_purchase_timestamp']].copy()
+        df_tempo = base[['order_purchase_timestamp']].copy()
         
-        df['order_purchase_timestamp'] = pd.to_datetime(df['order_purchase_timestamp'])
+        df_tempo['order_purchase_timestamp'] = pd.to_datetime(df_tempo['order_purchase_timestamp'])
 
-        df['tempo_id'] = df['order_purchase_timestamp'].dt.strftime('%Y%m%d').astype(int)
-        df['data'] = df['order_purchase_timestamp'].dt.date
-        df['ano'] = df['order_purchase_timestamp'].dt.year
-        df['mes'] = df['order_purchase_timestamp'].dt.month
-        df['dia'] = df['order_purchase_timestamp'].dt.day
-        df['dia_semana'] = df['order_purchase_timestamp'].dt.day_name()
+        df_tempo['tempo_id'] = df_tempo['order_purchase_timestamp'].dt.strftime('%Y%m%d').astype(int)
+        df_tempo['data'] = df_tempo['order_purchase_timestamp'].dt.date
+        df_tempo['ano'] = df_tempo['order_purchase_timestamp'].dt.year
+        df_tempo['mes'] = df_tempo['order_purchase_timestamp'].dt.month
+        df_tempo['dia'] = df_tempo['order_purchase_timestamp'].dt.day
+        df_tempo['dia_semana'] = df_tempo['order_purchase_timestamp'].dt.day_name()
 
-        df_tempo = df[['tempo_id', 'data', 'ano', 'mes', 'dia', 'dia_semana']].drop_duplicates(subset='tempo_id')
+        df_tempo = df_tempo[['tempo_id', 'data', 'ano', 'mes', 'dia', 'dia_semana']].drop_duplicates(subset='tempo_id')
         
         logger.info(f'dim_tempo criada com sucesso | registros={len(df_tempo)}')
         
@@ -41,11 +41,11 @@ def dim_tempo(base: pd.DataFrame) -> pd.DataFrame:
     
 def dim_cliente(clientes: pd.DataFrame) -> pd.DataFrame:
     try:
-        df = clientes[['customer_id', 'customer_unique_id', 'customer_zip_code_prefix', 'customer_city', 'customer_state']].drop_duplicates().copy()
+        df_cliente = clientes[['customer_id', 'customer_unique_id', 'customer_zip_code_prefix', 'customer_city', 'customer_state']].drop_duplicates().copy()
         
-        df['cliente_id'] = range(1, len(df) + 1)
+        df_cliente['cliente_id'] = range(1, len(df_cliente) + 1)
         
-        df_cliente = df[['cliente_id', 'customer_id', 'customer_unique_id', 'customer_zip_code_prefix', 'customer_city', 'customer_state']]
+        df_cliente = df_cliente[['cliente_id', 'customer_id', 'customer_unique_id', 'customer_zip_code_prefix', 'customer_city', 'customer_state']]
         
         logger.info(f'dim_cliente criada com sucesso | registros={len(df_cliente)}')
         
@@ -71,15 +71,16 @@ def lookup_cliente(base: pd.DataFrame, dim_cliente_df: pd.DataFrame) -> pd.DataF
     
 def lookup_tempo(base_com_cliente: pd.DataFrame, dim_tempo_df: pd.DataFrame) -> pd.DataFrame:
     try:
-        base_cliente = base_com_cliente.copy()
+        base = base_com_cliente.copy()
         
-        base_cliente['order_purchase_timestamp'] = pd.to_datetime(base_cliente['order_purchase_timestamp'])
-        base_cliente['data'] = base_cliente['order_purchase_timestamp'].dt.date
-        base = base_cliente.merge(dim_tempo_df[['tempo_id', 'data']], on='data')
+        base['order_purchase_timestamp'] = pd.to_datetime(base['order_purchase_timestamp'])
+        base['data'] = base['order_purchase_timestamp'].dt.date
         
-        base_com_tempo = base[['order_id', 'order_item_id', 'cliente_id', 'tempo_id', 'customer_id', 'order_purchase_timestamp', 'data', 'price', 'freight_value']]
+        base_com_tempo = base.merge(dim_tempo_df[['tempo_id', 'data']], on='data')
         
-        logger.info(f'lookup tempo concluido | antes={len(base_cliente)} | depois={len(base_com_tempo)}')
+        base_com_tempo = base_com_tempo[['order_id', 'order_item_id', 'cliente_id', 'tempo_id', 'customer_id', 'order_purchase_timestamp', 'data', 'price', 'freight_value']]
+        
+        logger.info(f'lookup tempo concluido | antes={len(base)} | depois={len(base_com_tempo)}')
         
         return base_com_tempo
     
@@ -89,10 +90,11 @@ def lookup_tempo(base_com_cliente: pd.DataFrame, dim_tempo_df: pd.DataFrame) -> 
 
 def fato_vendas(base_com_tempo: pd.DataFrame) -> pd.DataFrame:
     try:
-        df = base_com_tempo.copy()
+        fato_venda = base_com_tempo.copy()
         
-        df['venda_id'] = range(1, len(df) + 1)
-        fato_venda = df[['venda_id', 'order_id', 'order_item_id', 'cliente_id', 'tempo_id', 'price', 'freight_value']]
+        fato_venda['venda_id'] = range(1, len(fato_venda) + 1)
+        
+        fato_venda = fato_venda[['venda_id', 'order_id', 'order_item_id', 'cliente_id', 'tempo_id', 'price', 'freight_value']]
         
         logger.info(f'fato_vendas criada com sucesso | registros={len(fato_venda)}')
         
