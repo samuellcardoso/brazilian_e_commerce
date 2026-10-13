@@ -2,3 +2,7 @@ __pycache__
 *.pyc
 .venv/
 .env
+data_lake/raw/*
+!data_lake/raw/.gitkeep
+data_lake/processed/*
+!data_lake/processed/.gitkeep
